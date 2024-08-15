@@ -8,10 +8,31 @@ import (
 	"github.com/google/uuid"
 )
 
-type Advertisment struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+type AdvertismentMetaData struct {
+	ID        uuid.UUID `json:"ad_id"`
+	CreatedAt time.Time `json:"-"`
+	CreatedBy uuid.UUID `json:"-"`
+	ExpiresAt time.Time `json:"-"`
 	Tags      []string  `json:"tags"`
+}
+
+type AdvertismentCategoryData struct {
+}
+
+type Advertisment struct {
+	MetaData     *AdvertismentMetaData
+	CategoryData *AdvertismentCategoryData
+}
+
+func NewAdvertisment(tags []string) *Advertisment {
+	return &Advertisment{
+		MetaData: &AdvertismentMetaData{
+			ID:        uuid.New(),
+			CreatedAt: time.Now(),
+			Tags:      tags,
+		},
+		CategoryData: nil,
+	}
 }
 
 type AdvertismentInventory struct {
@@ -25,13 +46,8 @@ func NewAdvertismentInventory() *AdvertismentInventory {
 }
 
 func (ai *AdvertismentInventory) CreateAdvertisment(tags []string) (*Advertisment, error) {
-	id := uuid.New()
-	ad := &Advertisment{
-		ID:        id,
-		CreatedAt: time.Now(),
-		Tags:      tags,
-	}
-
+	ad := NewAdvertisment(tags)
+	id := ad.MetaData.ID
 	if _, exists := ai.inventory[id]; !exists {
 		ai.inventory[id] = ad
 
@@ -55,7 +71,7 @@ func (ai *AdvertismentInventory) GetAdvertismentsWithTag(tag string) ([]*Adverti
 	var ads []*Advertisment
 
 	for _, v := range ai.inventory {
-		if slices.Contains(v.Tags, tag) {
+		if slices.Contains(v.MetaData.Tags, tag) {
 			ads = append(ads, v)
 		}
 	}

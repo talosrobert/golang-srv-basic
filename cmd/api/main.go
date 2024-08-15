@@ -1,19 +1,37 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
+const version = "0.0.1"
+
+type config struct {
+	port int
+	env  string
+}
+
 func main() {
-	appl := newApplication()
+	var cfg config
+	flag.IntVar(&cfg.port, "port", 4000, "API server port")
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.Parse()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /ad/{id}", appl.getAdvertismentHandler)
-	mux.HandleFunc("POST /ad/", appl.createAdvertismentHandler)
+	appl := newApplication(cfg)
 
-	addr := ":8080"
-	err := http.ListenAndServe(addr, mux)
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.port),
+		Handler:      appl.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
+	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
