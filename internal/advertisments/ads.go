@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type AdvertismentMetaData struct {
+type Advertisment struct {
 	ID        uuid.UUID `json:"ad_id"`
 	CreatedAt time.Time `json:"-"`
 	CreatedBy uuid.UUID `json:"-"`
@@ -16,22 +16,11 @@ type AdvertismentMetaData struct {
 	Tags      []string  `json:"tags"`
 }
 
-type AdvertismentCategoryData struct {
-}
-
-type Advertisment struct {
-	MetaData     *AdvertismentMetaData
-	CategoryData *AdvertismentCategoryData
-}
-
 func NewAdvertisment(tags []string) *Advertisment {
 	return &Advertisment{
-		MetaData: &AdvertismentMetaData{
-			ID:        uuid.New(),
-			CreatedAt: time.Now(),
-			Tags:      tags,
-		},
-		CategoryData: nil,
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		Tags:      tags,
 	}
 }
 
@@ -47,7 +36,7 @@ func NewAdvertismentInventory() *AdvertismentInventory {
 
 func (ai *AdvertismentInventory) CreateAdvertisment(tags []string) (*Advertisment, error) {
 	ad := NewAdvertisment(tags)
-	id := ad.MetaData.ID
+	id := ad.ID
 	if _, exists := ai.inventory[id]; !exists {
 		ai.inventory[id] = ad
 
@@ -71,7 +60,7 @@ func (ai *AdvertismentInventory) GetAdvertismentsWithTag(tag string) ([]*Adverti
 	var ads []*Advertisment
 
 	for _, v := range ai.inventory {
-		if slices.Contains(v.MetaData.Tags, tag) {
+		if slices.Contains(v.Tags, tag) {
 			ads = append(ads, v)
 		}
 	}

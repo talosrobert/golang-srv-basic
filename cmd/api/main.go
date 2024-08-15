@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 const version = "0.0.1"
