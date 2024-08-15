@@ -16,4 +16,5 @@ $ podman image pull haproxy:lts-alpine
 $ podman image pull postgres:16-alpine
 $ podman network create appl
 $ podman pod create -n appl --network appl
-$ podman container run -d -t --pod appl --network appl --name db -e POSTGRES_PASSWORD=${}-e POSTGRES_DB=appl postgres:16-alpine
+$ podman container run -d -t --pod appl --network appl --name db -e POSTGRES_PASSWORD=${APPL_POSTGRES_PWD} -e POSTGRES_DB=appl postgres:16-alpine
+~~~
