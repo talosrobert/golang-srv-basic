@@ -17,18 +17,30 @@ type AuctionItem struct {
 	ExpiresAt            time.Time
 	SoldAt               time.Time
 	SetDownAt            time.Time
-	CurrentBid           *Bids
+	HighestBid           *AuctionBid
 	AdministrativelyDown *ItemModeration
 	Seller               *AuctionUser
-	Comments             *ItemComments
+	Comments             []*ItemComment
 }
 
 type AuctionUser struct {
-	ID uuid.UUID
+	ID            uuid.UUID
+	FirstName     string
+	LastName      string
+	DisplayName   string
+	EMail         string
+	RegisteredAt  time.Time
+	DeactivatedAt time.Time
+	DeactivatedBy *AuctionAdmin
 }
 
 type AuctionAdmin struct {
-	ID uuid.UUID
+	ID          uuid.UUID
+	FirstName   string
+	LastName    string
+	DisplayName string
+	EMail       string
+	CreatedAt   time.Time
 }
 
 type ItemModeration struct {
@@ -41,12 +53,6 @@ type ItemComment struct {
 	CommentText   string
 	CommentSentBy *AuctionUser
 	CommentSentAt time.Time
-}
-
-type ItemCommentChain struct {
-	Comments []*ItemComment
-}
-
-type ItemComments struct {
-	CommentChains []*ItemCommentChain
+	ParentComment *ItemComment
+	ChildComments []*ItemComment
 }
