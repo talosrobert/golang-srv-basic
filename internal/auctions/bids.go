@@ -8,3 +8,7 @@ type AuctionBid struct {
 	BidBy     *AuctionUser
 	BidAt     time.Time
 }
+
+func (ab *AuctionBid) createAuctionBid(item *AuctionItem, amount float64, user *AuctionUser) (*AuctionBid, error) {
+	return nil, nil
+}
