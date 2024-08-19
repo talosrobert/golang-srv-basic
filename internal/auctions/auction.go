@@ -36,3 +36,51 @@ type ItemComment struct {
 	ParentComment *ItemComment
 	ChildComments []*ItemComment
 }
+
+func (ai *AuctionItem) getAuctionItem(id uuid.UUID) (*AuctionItem, error) {
+	return nil, nil
+}
+
+func (ai *AuctionItem) createAuctionItem(id uuid.UUID) (*AuctionItem, error) {
+	return nil, nil
+}
+
+func (ai *AuctionItem) removeAuctionItem(id uuid.UUID) (*AuctionItem, error) {
+	return nil, nil
+}
+
+func (ai *AuctionItem) updateAuctionItem(id uuid.UUID) (*AuctionItem, error) {
+	return nil, nil
+}
+
+func (au *AuctionUser) getAuctionUser(id uuid.UUID) (*AuctionUser, error) {
+	return nil, nil
+}
+
+func (au *AuctionUser) createAuctionUser(id uuid.UUID) (*AuctionUser, error) {
+	return nil, nil
+}
+
+func (au *AuctionUser) removeAuctionUser(id uuid.UUID) (*AuctionUser, error) {
+	return nil, nil
+}
+
+func (au *AuctionUser) updateAuctionUser(id uuid.UUID) (*AuctionUser, error) {
+	return nil, nil
+}
+
+func (ic *ItemComment) getItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
+	return nil, nil
+}
+
+func (ic *ItemComment) createItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
+	return nil, nil
+}
+
+func (ic *ItemComment) removeItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
+	return nil, nil
+}
+
+func (ic *ItemComment) updateItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
+	return nil, nil
+}
