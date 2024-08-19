@@ -17,10 +17,6 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA appl TO appl_role;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA appl TO appl_role;
 GRANT ALL PRIVILEGES ON SCHEMA appl TO appl_role;
 
--- Set Default Privileges for Future Tables and Sequences
-ALTER DEFAULT PRIVILEGES IN SCHEMA appl GRANT ALL PRIVILEGES ON TABLES TO appl_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA appl GRANT ALL PRIVILEGES ON SEQUENCES TO appl_role;
-
 -- 5. Create Tables in the `appl` Schema
 
 CREATE TABLE appl.auction_users (
