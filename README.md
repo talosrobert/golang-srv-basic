@@ -1,6 +1,6 @@
 # golang-srv-basic
 
-golang REST server with basic authentication
+A very basic REST API server written in Go.
 
 ## endpoints
 - POST   /ad/ `create an ad, returns ID`
@@ -26,5 +26,5 @@ $ podman image build -t appl -f scripts/Containerfile_appl .
 
 Running the custom image file with the golang binary (with port exposed until the haproxy config is ready):
 ~~~bash
-$ podman container run -d -t --pod appl --network appl --name appl -e APPL_POSTGRES_DSN=${APPL_POSTGRES_DSN} -p 4000:4000 localhost/appl:latest
+$ podman container run -d -t --pod appl --network appl --name appl -e APPL_POSTGRES_DSN="postgres://appl_role:${APPL_ROLE_POSTGRES_PWD}@db/appl?search_path=appl" -p 4000:4000 localhost/appl:latest
 ~~~
