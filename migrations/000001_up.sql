@@ -20,8 +20,8 @@ GRANT ALL PRIVILEGES ON SCHEMA appl TO appl_role;
 -- 5. Create Tables in the `appl` Schema
 
 CREATE TABLE appl.auction_users (
-    id uuid PRIMARY KEY,
-    is_active boolean NOT NULL,
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     first_name varchar(255) NOT NULL,
     last_name varchar(255) NOT NULL,
@@ -30,23 +30,21 @@ CREATE TABLE appl.auction_users (
 );
 
 CREATE TABLE appl.auction_items (
-    id uuid PRIMARY KEY,
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     starting_price numeric(10, 2) NOT NULL CHECK (starting_price >= 0),
-    reserve_price numeric(10, 2),
-    is_active boolean NOT NULL,
+    reserve_price numeric(10, 2) CHECK (reserve_price IS NULL OR reserve_price >= 0),
+    is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     expires_at timestamp with time zone DEFAULT (now() + INTERVAL '6 weeks') NOT NULL,
-    highest_bid serial,
     seller uuid NOT NULL REFERENCES appl.auction_users(id) ON DELETE SET NULL,
     version smallint DEFAULT 0 CHECK (version >= 0),
-    CONSTRAINT reserve_price_check CHECK (reserve_price IS NULL OR reserve_price >= 0)
 );
 
 CREATE TABLE appl.item_comments (
     id serial PRIMARY KEY,
     comment_text text NOT NULL,
     comment_sent_by uuid NOT NULL REFERENCES appl.auction_users(id) ON DELETE CASCADE,
-    comment_sent_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     parent_comment serial,
     CONSTRAINT parent_comment_check CHECK (parent_comment IS NULL OR parent_comment > 0)
 );
@@ -56,6 +54,6 @@ CREATE TABLE appl.auction_bids (
     item uuid NOT NULL REFERENCES appl.auction_items(id) ON DELETE CASCADE,
     bid_amount numeric(10, 2) NOT NULL CHECK (bid_amount >= 0),
     bid_by uuid NOT NULL REFERENCES appl.auction_users(id) ON DELETE CASCADE,
-    bid_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT bid_amount_check CHECK (bid_amount > 0)
 );

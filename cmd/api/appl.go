@@ -7,28 +7,27 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/talosrobert/golang-srv-basic/internal/advertisments"
+	"github.com/talosrobert/golang-srv-basic/internal/auctions"
 )
 
 type application struct {
 	cfg    config
 	logger *log.Logger
-	ads    *advertisments.AdvertismentInventory
+	models auctions.Models
 }
 
 func newApplication(cfg config) *application {
 	return &application{
 		cfg:    cfg,
 		logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
-		ads:    advertisments.NewAdvertismentInventory(),
 	}
 }
 
 func (appl *application) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/healthcheck", appl.healthcheckHandler)
-	mux.HandleFunc("GET /v1/ad/{id}", appl.getAdvertismentHandler)
-	mux.HandleFunc("POST /v1/ad", appl.createAdvertismentHandler)
+	mux.HandleFunc("GET /v1/ad/{id}", appl.createAuctionItemHandler)
+	mux.HandleFunc("POST /v1/ad", appl.getAuctionItemHandler)
 	return mux
 }
 
@@ -47,9 +46,11 @@ func (appl *application) healthcheckHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (appl *application) createAdvertismentHandler(w http.ResponseWriter, r *http.Request) {
+func (appl *application) createAuctionItemHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Tags []string `json:"tags"`
+		startingPrice float64
+		reservePrice  float64
+		userID        uuid.UUID
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -59,14 +60,20 @@ func (appl *application) createAdvertismentHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	ad, err := appl.ads.CreateAdvertisment(input.Tags)
+	ai := &auctions.AuctionItem{
+		StartingPrice: input.startingPrice,
+		ReservePrice:  input.reservePrice,
+		Seller:        input.userID,
+	}
+
+	err = appl.models.AuctionItems.Create(ai)
 	if err != nil {
 		appl.logger.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = writeJSON(w, http.StatusOK, envelope{"ad": ad})
+	err = writeJSON(w, http.StatusOK, envelope{"auction_item": ai})
 	if err != nil {
 		appl.logger.Println(err)
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
@@ -74,7 +81,7 @@ func (appl *application) createAdvertismentHandler(w http.ResponseWriter, r *htt
 	}
 }
 
-func (appl *application) getAdvertismentHandler(w http.ResponseWriter, r *http.Request) {
+func (appl *application) getAuctionItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		appl.logger.Println(err)
@@ -82,14 +89,14 @@ func (appl *application) getAdvertismentHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	ad, err := appl.ads.GetAdvertismentByID(id)
+	ai, err := appl.models.AuctionItems.Read(id)
 	if err != nil {
 		appl.logger.Println(err)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	err = writeJSON(w, http.StatusOK, envelope{"ad": ad})
+	err = writeJSON(w, http.StatusOK, envelope{"auction_item": ai})
 	if err != nil {
 		appl.logger.Println(err)
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)

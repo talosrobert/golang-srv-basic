@@ -13,74 +13,7 @@ type AuctionItem struct {
 	IsActive      bool
 	CreatedAt     time.Time
 	ExpiresAt     time.Time
-	HighestBid    *AuctionBid
-	Seller        *AuctionUser
+	Seller        uuid.UUID
 	Comments      []*ItemComment
 	Version       int16
-}
-
-type AuctionUser struct {
-	ID          uuid.UUID
-	IsActive    bool
-	CreatedAt   time.Time
-	FirstName   string
-	LastName    string
-	DisplayName string
-	EMail       string
-}
-
-type ItemComment struct {
-	CommentText   string
-	CommentSentBy *AuctionUser
-	CommentSentAt time.Time
-	ParentComment *ItemComment
-	ChildComments []*ItemComment
-}
-
-func (ai *AuctionItem) getAuctionItem(id uuid.UUID) (*AuctionItem, error) {
-	return nil, nil
-}
-
-func (ai *AuctionItem) createAuctionItem(id uuid.UUID) (*AuctionItem, error) {
-	return nil, nil
-}
-
-func (ai *AuctionItem) removeAuctionItem(id uuid.UUID) (*AuctionItem, error) {
-	return nil, nil
-}
-
-func (ai *AuctionItem) updateAuctionItem(id uuid.UUID) (*AuctionItem, error) {
-	return nil, nil
-}
-
-func (au *AuctionUser) getAuctionUser(id uuid.UUID) (*AuctionUser, error) {
-	return nil, nil
-}
-
-func (au *AuctionUser) createAuctionUser(id uuid.UUID) (*AuctionUser, error) {
-	return nil, nil
-}
-
-func (au *AuctionUser) removeAuctionUser(id uuid.UUID) (*AuctionUser, error) {
-	return nil, nil
-}
-
-func (au *AuctionUser) updateAuctionUser(id uuid.UUID) (*AuctionUser, error) {
-	return nil, nil
-}
-
-func (ic *ItemComment) getItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
-	return nil, nil
-}
-
-func (ic *ItemComment) createItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
-	return nil, nil
-}
-
-func (ic *ItemComment) removeItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
-	return nil, nil
-}
-
-func (ic *ItemComment) updateItemComment(id uuid.UUID, user *AuctionUser, parent *ItemComment) (*ItemComment, error) {
-	return nil, nil
 }
