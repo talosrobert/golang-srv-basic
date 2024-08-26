@@ -17,8 +17,8 @@ type AuctionBidModel struct {
 	DB *sql.DB
 }
 
-func (m AuctionBidModel) create(item *AuctionItem, amount float64, user *AuctionUser) error {
-	q := `
+func (m AuctionBidModel) create(ab *AuctionBid) error {
+	query := `
 	INSERT INTO appl.auction_bids (item, bid_amount, bid_by)
 	VALUES ($1, $2, $3)
 	RETURN id, created_at
@@ -27,7 +27,9 @@ func (m AuctionBidModel) create(item *AuctionItem, amount float64, user *Auction
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return nil
+	args := []interface{}{&ab.Item, &ab.BidAmount, &ab.BidBy}
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ab.Item, &ab.BidAmount, &ab.BidBy, &ab.BidAt)
 }
 
 func (m AuctionBidModel) read(id int) (*AuctionBid, error) {

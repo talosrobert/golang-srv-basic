@@ -7,12 +7,29 @@ import (
 )
 
 type Models struct {
+	AuctionUser interface {
+		Create(au *AuctionUser) error
+		Read(id uuid.UUID) (*AuctionUser, error)
+		Update(au *AuctionUser) error
+		Delete(id uuid.UUID) error
+	}
 	AuctionItems interface {
 		Create(ai *AuctionItem) error
 		Read(id uuid.UUID) (*AuctionItem, error)
 		Update(ai *AuctionItem) error
 		Delete(id uuid.UUID) error
 	}
+}
+
+func NewModels(db *sql.DB) Models {
+	return Models{
+		AuctionUser:  AuctionUserModel{DB: db},
+		AuctionItems: AuctionItemModel{DB: db},
+	}
+}
+
+type AuctionUserModel struct {
+	DB *sql.DB
 }
 
 type AuctionItemModel struct {
@@ -59,5 +76,18 @@ func (m AuctionItemModel) Update(ai *AuctionItem) error {
 	return nil
 }
 func (m AuctionItemModel) Delete(id uuid.UUID) error {
+	return nil
+}
+
+func (m AuctionUserModel) Create(au *AuctionUser) error {
+	return nil
+}
+func (m AuctionUserModel) Read(id uuid.UUID) (*AuctionUser, error) {
+	return nil, nil
+}
+func (m AuctionUserModel) Update(au *AuctionUser) error {
+	return nil
+}
+func (m AuctionUserModel) Delete(id uuid.UUID) error {
 	return nil
 }
