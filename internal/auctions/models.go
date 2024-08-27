@@ -38,7 +38,7 @@ type AuctionItemModel struct {
 
 func (m AuctionItemModel) Create(ai *AuctionItem) error {
 	query := `
-	INSERT INTO auction_items (starting_price, reserve_price, user_id)
+	INSERT INTO appl.auction_items (starting_price, reserve_price, user_id)
 	VALUES ($1, $2, $3)
 	RETURNING id, version
 	`
@@ -49,7 +49,7 @@ func (m AuctionItemModel) Create(ai *AuctionItem) error {
 func (m AuctionItemModel) Read(id uuid.UUID) (*AuctionItem, error) {
 	query := `
 	SELECT id, starting_price, reserve_price, is_active, created_at, expires_at, seller, version
-	FROM auction_items
+	FROM appl.auction_items
 	WHERE id = $1
 	`
 
@@ -83,7 +83,29 @@ func (m AuctionUserModel) Create(au *AuctionUser) error {
 	return nil
 }
 func (m AuctionUserModel) Read(id uuid.UUID) (*AuctionUser, error) {
-	return nil, nil
+	query := `
+	SELECT id, is_active, created_at, first_name, last_name, display_name, email
+	FROM appl.auction_users
+	WHERE id = $1
+	`
+
+	var au AuctionUser
+
+	err := m.DB.QueryRow(query, id).Scan(
+		&au.ID,
+		&au.IsActive,
+		&au.CreatedAt,
+		&au.FirstName,
+		&au.LastName,
+		&au.DisplayName,
+		&au.EMail,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &au, nil
 }
 func (m AuctionUserModel) Update(au *AuctionUser) error {
 	return nil

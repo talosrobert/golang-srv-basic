@@ -52,7 +52,7 @@ func main() {
 	}
 	defer db.Close()
 
-	appl := newApplication(cfg)
+	appl := newApplication(cfg, db)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),

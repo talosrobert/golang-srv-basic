@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -16,18 +17,21 @@ type application struct {
 	models auctions.Models
 }
 
-func newApplication(cfg config) *application {
+func newApplication(cfg config, db *sql.DB) *application {
 	return &application{
 		cfg:    cfg,
 		logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
+		models: auctions.NewModels(db),
 	}
 }
 
 func (appl *application) routes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/healthcheck", appl.healthcheckHandler)
-	mux.HandleFunc("GET /v1/ad/{id}", appl.createAuctionItemHandler)
-	mux.HandleFunc("POST /v1/ad", appl.getAuctionItemHandler)
+	mux.HandleFunc("GET /v1/item/{id}", appl.getAuctionItemHandler)
+	mux.HandleFunc("GET /v1/user/{id}", appl.getAuctionUserHandler)
+	mux.HandleFunc("POST /v1/item", appl.createAuctionItemHandler)
+	mux.HandleFunc("POST /v1/user", appl.createAuctionUserHandler)
 	return mux
 }
 
@@ -48,9 +52,9 @@ func (appl *application) healthcheckHandler(w http.ResponseWriter, r *http.Reque
 
 func (appl *application) createAuctionItemHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		startingPrice float64
-		reservePrice  float64
-		userID        uuid.UUID
+		StartingPrice float64   `json:"starting_price"`
+		ReservePrice  float64   `json:"reserve_price"`
+		UserID        uuid.UUID `json:"user_id"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&input)
@@ -61,9 +65,9 @@ func (appl *application) createAuctionItemHandler(w http.ResponseWriter, r *http
 	}
 
 	ai := &auctions.AuctionItem{
-		StartingPrice: input.startingPrice,
-		ReservePrice:  input.reservePrice,
-		Seller:        input.userID,
+		StartingPrice: input.StartingPrice,
+		ReservePrice:  input.ReservePrice,
+		Seller:        input.UserID,
 	}
 
 	err = appl.models.AuctionItems.Create(ai)
@@ -77,7 +81,6 @@ func (appl *application) createAuctionItemHandler(w http.ResponseWriter, r *http
 	if err != nil {
 		appl.logger.Println(err)
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -100,6 +103,63 @@ func (appl *application) getAuctionItemHandler(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		appl.logger.Println(err)
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+	}
+}
+
+func (appl *application) createAuctionUserHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		FirstName   string `json:"first_name"`
+		LastName    string `json:"last_name"`
+		DisplayName string `json:"display_name"`
+		EMail       string `json:"email"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	au := &auctions.AuctionUser{
+		FirstName:   input.FirstName,
+		LastName:    input.LastName,
+		DisplayName: input.DisplayName,
+		EMail:       input.EMail,
+	}
+
+	err = appl.models.AuctionUser.Create(au)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSON(w, http.StatusOK, envelope{"auction_user": au})
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+	}
+}
+
+func (appl *application) getAuctionUserHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	au, err := appl.models.AuctionUser.Read(id)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	err = writeJSON(w, http.StatusOK, envelope{"auction_user": au})
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
 	}
 }
