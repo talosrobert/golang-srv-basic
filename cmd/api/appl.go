@@ -30,6 +30,8 @@ func (appl *application) routes() *http.ServeMux {
 	mux.HandleFunc("GET /v1/healthcheck", appl.healthcheckHandler)
 	mux.HandleFunc("GET /v1/item/{id}", appl.getAuctionItemHandler)
 	mux.HandleFunc("GET /v1/user/{id}", appl.getAuctionUserHandler)
+	mux.HandleFunc("PUT /v1/item/{id}", appl.updateAuctionItemHandler)
+	mux.HandleFunc("PUT /v1/user/{id}", appl.updateAuctionUserHandler)
 	mux.HandleFunc("POST /v1/item", appl.createAuctionItemHandler)
 	mux.HandleFunc("POST /v1/user", appl.createAuctionUserHandler)
 	return mux
@@ -106,6 +108,55 @@ func (appl *application) getAuctionItemHandler(w http.ResponseWriter, r *http.Re
 	}
 }
 
+func (appl *application) updateAuctionItemHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ai, err := appl.models.AuctionItems.Read(id)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var input struct {
+		StartingPrice *float64 `json:"starting_price"`
+		ReservePrice  *float64 `json:"reserve_price"`
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if input.StartingPrice != nil {
+		ai.StartingPrice = *input.StartingPrice
+	}
+
+	if input.ReservePrice != nil {
+		ai.ReservePrice = *input.ReservePrice
+	}
+
+	err = appl.models.AuctionItems.Update(ai)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	err = writeJSON(w, http.StatusOK, envelope{"auction_item": ai})
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+	}
+}
+
 func (appl *application) createAuctionUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		FirstName   string `json:"first_name"`
@@ -163,3 +214,5 @@ func (appl *application) getAuctionUserHandler(w http.ResponseWriter, r *http.Re
 		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
 	}
 }
+
+func (appl *application) updateAuctionUserHandler(w http.ResponseWriter, r *http.Request) {}

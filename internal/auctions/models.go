@@ -2,8 +2,13 @@ package auctions
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/google/uuid"
+)
+
+var (
+	ErrRecordNotFound = errors.New("record not found")
 )
 
 type Models struct {
@@ -44,7 +49,7 @@ func (m AuctionItemModel) Create(ai *AuctionItem) error {
 	`
 	args := []interface{}{ai.StartingPrice, ai.ReservePrice, ai.Seller}
 
-	return m.DB.QueryRow(query, args).Scan(&ai.ID, &ai.CreatedAt, &ai.ExpiresAt, &ai.IsActive, &ai.Version)
+	return m.DB.QueryRow(query, args...).Scan(&ai.ID, &ai.CreatedAt, &ai.ExpiresAt, &ai.IsActive, &ai.Version)
 }
 func (m AuctionItemModel) Read(id uuid.UUID) (*AuctionItem, error) {
 	query := `
@@ -73,15 +78,53 @@ func (m AuctionItemModel) Read(id uuid.UUID) (*AuctionItem, error) {
 	return &ai, nil
 }
 func (m AuctionItemModel) Update(ai *AuctionItem) error {
-	return nil
+	query := `
+	UPDATE appl.auction_items
+	SET starting_price = $1, reserver_price = $2, version = version + 1
+	WHERE id = $3
+	RETURNING version
+	`
+
+	args := []interface{}{ai.StartingPrice, ai.ReservePrice, ai.ID}
+
+	return m.DB.QueryRow(query, args...).Scan(&ai.Version)
 }
+
 func (m AuctionItemModel) Delete(id uuid.UUID) error {
+	query := `
+	DELETE FROM appl.auction_items
+	WHERE id = $1
+	`
+
+	result, err := m.DB.Exec(query)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return ErrRecordNotFound
+	}
+
 	return nil
 }
 
 func (m AuctionUserModel) Create(au *AuctionUser) error {
-	return nil
+	query := `
+	INSERT INTO appl.auction_users (first_name, last_name, display_name, email)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id, is_active, created_at 
+	`
+
+	args := []interface{}{au.FirstName, au.LastName, au.DisplayName, au.EMail}
+
+	return m.DB.QueryRow(query, args...).Scan(&au.ID, &au.IsActive, &au.CreatedAt)
 }
+
 func (m AuctionUserModel) Read(id uuid.UUID) (*AuctionUser, error) {
 	query := `
 	SELECT id, is_active, created_at, first_name, last_name, display_name, email
