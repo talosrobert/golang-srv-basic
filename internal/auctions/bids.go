@@ -19,10 +19,32 @@ type AuctionBidModel struct {
 
 func (m AuctionBidModel) create(ab *AuctionBid) error {
 	query := `
-	INSERT INTO appl.auction_bids (item, bid_amount, bid_by)
-	VALUES ($1, $2, $3)
-	RETURN id, created_at
-	`
+	CREATE OR REPLACE FUNCTION appl.add_bid(item_id uuid, bid_amount numeric, bid_by uuid)
+	 RETURNS integer
+	 LANGUAGE plpgsql
+	AS $function$
+	DECLARE
+	    new_bid_id integer;
+	BEGIN
+	    -- Debugging: Print out the input values
+	    RAISE NOTICE 'item_id: %, bid_amount: %, bid_by: %', item_id, bid_amount, bid_by;
+
+	    -- Check if the item has expired
+	    IF now() > (SELECT expires_at FROM appl.auction_items WHERE id = item_id) THEN
+		RAISE EXCEPTION 'Auction Item with ID % has already expired', item_id;
+	    ELSE
+		-- Insert the bid and return the new bid's ID
+		INSERT INTO appl.auction_bids (item, bid_amount, bid_by)
+		VALUES (item_id, bid_amount, bid_by)
+		RETURNING id INTO new_bid_id;
+
+		-- Debugging: Print out the new bid ID
+		RAISE NOTICE 'New bid ID: %', new_bid_id;
+		
+		RETURN new_bid_id;
+	    END IF;
+	END;
+	$function$`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
