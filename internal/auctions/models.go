@@ -1,14 +1,17 @@
 package auctions
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 var (
-	ErrRecordNotFound = errors.New("record not found")
+	ErrVersionConflict = errors.New("version conflict")
+	ErrRecordNotFound  = errors.New("record not found")
 )
 
 type Models struct {
@@ -49,7 +52,10 @@ func (m AuctionItemModel) Create(ai *AuctionItem) error {
 	`
 	args := []interface{}{ai.StartingPrice, ai.ReservePrice, ai.Seller}
 
-	return m.DB.QueryRow(query, args...).Scan(&ai.ID, &ai.CreatedAt, &ai.ExpiresAt, &ai.IsActive, &ai.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ai.ID, &ai.StartingPrice, &ai.ReservePrice, &ai.IsActive, &ai.CreatedAt, &ai.ExpiresAt, &ai.Seller, &ai.LastMinuteBids, &ai.Version)
 }
 func (m AuctionItemModel) Read(id uuid.UUID) (*AuctionItem, error) {
 	query := `
@@ -59,8 +65,10 @@ func (m AuctionItemModel) Read(id uuid.UUID) (*AuctionItem, error) {
 	`
 
 	var ai AuctionItem
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	err := m.DB.QueryRow(query, id).Scan(
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&ai.ID,
 		&ai.StartingPrice,
 		&ai.ReservePrice,
@@ -81,13 +89,25 @@ func (m AuctionItemModel) Update(ai *AuctionItem) error {
 	query := `
 	UPDATE appl.auction_items
 	SET starting_price = $1, reserver_price = $2, version = version + 1
-	WHERE id = $3
+	WHERE id = $3 AND version $4
 	RETURNING version
 	`
 
 	args := []interface{}{ai.StartingPrice, ai.ReservePrice, ai.ID}
 
-	return m.DB.QueryRow(query, args...).Scan(&ai.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&ai.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrVersionConflict
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (m AuctionItemModel) Delete(id uuid.UUID) error {
@@ -96,7 +116,10 @@ func (m AuctionItemModel) Delete(id uuid.UUID) error {
 	WHERE id = $1
 	`
 
-	result, err := m.DB.Exec(query)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -122,7 +145,10 @@ func (m AuctionUserModel) Create(au *AuctionUser) error {
 
 	args := []interface{}{au.FirstName, au.LastName, au.DisplayName, au.EMail}
 
-	return m.DB.QueryRow(query, args...).Scan(&au.ID, &au.IsActive, &au.CreatedAt)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&au.ID, &au.IsActive, &au.CreatedAt)
 }
 
 func (m AuctionUserModel) Read(id uuid.UUID) (*AuctionUser, error) {
@@ -134,7 +160,10 @@ func (m AuctionUserModel) Read(id uuid.UUID) (*AuctionUser, error) {
 
 	var au AuctionUser
 
-	err := m.DB.QueryRow(query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&au.ID,
 		&au.IsActive,
 		&au.CreatedAt,
