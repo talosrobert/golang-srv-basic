@@ -8,20 +8,20 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/talosrobert/golang-srv-basic/internal/auctions"
+	"github.com/talosrobert/golang-srv-basic/internal/data"
 )
 
 type application struct {
 	cfg    config
 	logger *log.Logger
-	models auctions.Models
+	models data.Models
 }
 
 func newApplication(cfg config, db *sql.DB) *application {
 	return &application{
 		cfg:    cfg,
 		logger: log.New(os.Stdout, "", log.Ldate|log.Ltime),
-		models: auctions.NewModels(db),
+		models: data.NewModels(db),
 	}
 }
 
@@ -66,7 +66,7 @@ func (appl *application) createAuctionItemHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	ai := &auctions.AuctionItem{
+	ai := &data.AuctionItem{
 		StartingPrice: input.StartingPrice,
 		ReservePrice:  input.ReservePrice,
 		Seller:        input.UserID,
@@ -124,8 +124,8 @@ func (appl *application) updateAuctionItemHandler(w http.ResponseWriter, r *http
 	}
 
 	var input struct {
-		StartingPrice *float64 `json:"starting_price"`
-		ReservePrice  *float64 `json:"reserve_price"`
+		StartingPrice *float64 `json:"starting_price,omitempty"`
+		ReservePrice  *float64 `json:"reserve_price,omitempty"`
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&input)
@@ -172,7 +172,7 @@ func (appl *application) createAuctionUserHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	au := &auctions.AuctionUser{
+	au := &data.AuctionUser{
 		FirstName:   input.FirstName,
 		LastName:    input.LastName,
 		DisplayName: input.DisplayName,

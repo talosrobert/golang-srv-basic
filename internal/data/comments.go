@@ -1,4 +1,4 @@
-package auctions
+package data
 
 import (
 	"time"
