@@ -73,8 +73,8 @@ func (m AuctionItemModel) Update(ai *AuctionItem) error {
 	if &ai.ReservePrice != nil {
 		query = `
 		UPDATE appl.auction_items
-		SET starting_price = $1, reserver_price = $2, version = version + 1
-		WHERE id = $3 AND version $4
+		SET starting_price = $1, reserve_price = $2, version = version + 1
+		WHERE id = $3 AND version = $4
 		RETURNING version
 		`
 		args = []interface{}{ai.StartingPrice, ai.ReservePrice, ai.ID, ai.Version}
@@ -82,7 +82,7 @@ func (m AuctionItemModel) Update(ai *AuctionItem) error {
 		query = `
 		UPDATE appl.auction_items
 		SET starting_price = $1, version = version + 1
-		WHERE id = $2 AND version $3
+		WHERE id = $2 AND version = $3
 		RETURNING version
 		`
 		args = []interface{}{ai.StartingPrice, ai.ID, ai.Version}

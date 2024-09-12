@@ -25,10 +25,10 @@ type Models struct {
 		Delete(id uuid.UUID) error
 	}
 	AuctionBids interface {
-		create(ab *AuctionBid) error
-		read(id int) (*AuctionBid, error)
-		update(ab *AuctionBid) (*AuctionBid, error)
-		delete(id int) error
+		Create(ab *AuctionBid) error
+		Read(id int) (*AuctionBid, error)
+		Update(ab *AuctionBid) (*AuctionBid, error)
+		Delete(id int) error
 	}
 }
 

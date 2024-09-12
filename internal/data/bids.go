@@ -17,7 +17,7 @@ type AuctionBidModel struct {
 	DB *sql.DB
 }
 
-func (m AuctionBidModel) create(ab *AuctionBid) error {
+func (m AuctionBidModel) Create(ab *AuctionBid) error {
 	query := `
 	CREATE OR REPLACE FUNCTION appl.add_bid(item_id uuid, bid_amount numeric, bid_by uuid)
 	 RETURNS integer
@@ -54,14 +54,14 @@ func (m AuctionBidModel) create(ab *AuctionBid) error {
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ab.Item, &ab.BidAmount, &ab.BidBy, &ab.BidAt)
 }
 
-func (m AuctionBidModel) read(id int) (*AuctionBid, error) {
+func (m AuctionBidModel) Read(id int) (*AuctionBid, error) {
 	return nil, nil
 }
 
-func (m AuctionBidModel) update(bid *AuctionBid) (*AuctionBid, error) {
+func (m AuctionBidModel) Update(bid *AuctionBid) (*AuctionBid, error) {
 	return nil, nil
 }
 
-func (m AuctionBidModel) delete(id int) error {
+func (m AuctionBidModel) Delete(id int) error {
 	return nil
 }

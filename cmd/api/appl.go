@@ -34,6 +34,7 @@ func (appl *application) routes() *http.ServeMux {
 	mux.HandleFunc("PUT /v1/user/{id}", appl.updateAuctionUserHandler)
 	mux.HandleFunc("POST /v1/item", appl.createAuctionItemHandler)
 	mux.HandleFunc("POST /v1/user", appl.createAuctionUserHandler)
+	mux.HandleFunc("POST /v1/bid", appl.createAuctionBidHandler)
 	return mux
 }
 
@@ -216,3 +217,42 @@ func (appl *application) getAuctionUserHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (appl *application) updateAuctionUserHandler(w http.ResponseWriter, r *http.Request) {}
+
+func (appl *application) createAuctionBidHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		ItemID uuid.UUID `json:"item_id"`
+		Bid    float64   `json:"auction_bid"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	item, err := appl.models.AuctionItems.Read(input.ItemID)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	ab := &data.AuctionBid{
+		Item:      item,
+		BidAmount: input.Bid,
+	}
+
+	err = appl.models.AuctionBids.Create(ab)
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSON(w, http.StatusOK, envelope{"auction_item": ab})
+	if err != nil {
+		appl.logger.Println(err)
+		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+	}
+}
